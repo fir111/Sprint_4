@@ -1,5 +1,6 @@
 package ru.praktikum_services.qa_scooter;
 
+import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
 import org.openqa.selenium.WebDriver;
 import org.junit.After;
@@ -10,6 +11,9 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 // import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 
 @RunWith(Parameterized.class)
 public class OrderTest {
@@ -52,10 +56,8 @@ public class OrderTest {
     public void checkOrder()  {
         ChromeOptions options = new ChromeOptions();
 
-        /*
-         System.setProperty("webdriver.gecko.driver", "/usr/local/Cellar/geckodriver/0.33.0/bin/geckodriver");
-         driver = new FirefoxDriver();
-        */
+        // System.setProperty("webdriver.gecko.driver", "/usr/local/Cellar/geckodriver/0.33.0/bin/geckodriver");
+        // driver = new FirefoxDriver();
 
         driver = new ChromeDriver(options);
         String serviceLink = "https://qa-scooter.praktikum-services.ru/";
@@ -78,7 +80,7 @@ public class OrderTest {
 
         RentForm rentForm = new RentForm(driver);
         rentForm.waitRentFormIsOpen();
-        String dateTime = rentForm.convertDatetimeToString();
+        String dateTime = RentForm.convertDatetimeToString();
         rentForm.setDatePickerInput(dateTime);
         rentForm.setRentTerm(rentTerm);
         rentForm.setColour(colour);
@@ -88,5 +90,19 @@ public class OrderTest {
         OrderModal modalElements = new OrderModal(driver);
         WebElement modalForm = modalElements.getModal();
         Assert.assertNotNull(modalForm);
+
+        String actualModalHeader = modalElements.getModalHeader();
+
+        String expectedOrderModalHeader = "Хотите оформить заказ?";
+        MatcherAssert.assertThat(actualModalHeader.strip(), is(expectedOrderModalHeader));
+
+        modalElements.clickOrderSubmitButton();
+
+        OrderStatusModal orderStatusModal = new OrderStatusModal(driver);
+        orderStatusModal.waitStatusModalIsOpen();
+
+        String actualOrderStatusModalText = orderStatusModal.getOrderStatusModalText();
+        String expectedOrderStatusModalHeader = "Заказ оформлен";
+        MatcherAssert.assertThat(actualOrderStatusModalText, startsWith(expectedOrderStatusModalHeader));
     }
 }
